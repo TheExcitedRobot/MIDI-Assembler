@@ -44,5 +44,12 @@ def pitchshift(snd_array, n, window_size=2**13, h=2**11):
     return speedx(stretched[window_size:], factor)
 
 
+from scipy.io import wavfile
 
+fps, bowl_sound = wavfile.read("whip_def.wav")
+tones = range(-25,25)
+#transposed = [pitchshift(bowl_sound, n) for n in tones]
+newSound = pitchshift(bowl_sound,20)
+
+wavfile.write('whip20.wav',fps,newSound)#transposed[20])
 
