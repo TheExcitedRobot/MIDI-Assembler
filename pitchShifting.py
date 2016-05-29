@@ -1,6 +1,9 @@
 import numpy as np
+from pydub import AudioSegment
+from scipy.io import wavfile
 
 """
+speedx, stretch, pitchshift 
 From: http://zulko.github.io/blog/2014/03/29/soundstretching-and-pitch-shifting-in-python/
 """
 
@@ -43,13 +46,37 @@ def pitchshift(snd_array, n, window_size=2**13, h=2**11):
     stretched = stretch(snd_array, 1.0/factor, window_size, h)
     return speedx(stretched[window_size:], factor)
 
-
-from scipy.io import wavfile
+#from http://stackoverflow.com/questions/35735497/how-to-create-a-pydub-audiosegment-using-an-numpy-array
+def convertSciToPyDub(channel,fps):
+    audioSeg = AudioSegment(
+        channel.tostring(),
+        frame_rate = fps,
+        sample_width=channel.dtype.itemsize,
+        channels=1
+    )
+    return audioSeg
 
 fps, bowl_sound = wavfile.read("whip_def.wav")
 tones = range(-25,25)
 #transposed = [pitchshift(bowl_sound, n) for n in tones]
-newSound = pitchshift(bowl_sound,20)
+newSound = bowl_sound#pitchshift(bowl_sound,20)
 
-wavfile.write('whip20.wav',fps,newSound)#transposed[20])
+#wavfile.write('whip20.wav',fps,newSound)#transposed[20])
+
+print "shape sound ",newSound.shape
+
+
+
+
+
+soundClip = convertSciToPyDub(newSound,fps)
+for tone in tones:
+    #print "shifting by tone ",tone
+    shiftedClip = pitchshift(bowl_sound,tone)
+    soundClip = soundClip.append(convertSciToPyDub(shiftedClip,fps))
+
+out_f = open("whippd.wav",'wb')
+soundClip.export(out_f,format='wav')
+
+
 
