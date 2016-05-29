@@ -7,6 +7,8 @@ https://github.com/vishnubob/python-midi/
 
 http://zulko.github.io/blog/2014/03/29/soundstretching-and-pitch-shifting-in-python/
 
+http://digitalmusics.dartmouth.edu/~mcasey/bregman/
+
 ## Other Packages of Interest
 http://scikits.appspot.com/audiolab
 
