@@ -18,3 +18,11 @@ http://arrowtheory.com/software/hypersonic/index.html
 ### Python Music Packages
 https://wiki.python.org/moin/PythonInMusic
 
+## General Process ideas
+1. read in different sound clips
+2. get pitches for each sound clips
+3. read in MIDI, with pitch & duration of each pitch
+4. combine sounds, shifted into MIDI pattern
+5. export sound
+
+
