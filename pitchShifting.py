@@ -34,7 +34,7 @@ def stretch(sound_array, f, window_size, h):
 
         # add to result
         i2 = int(i/f)
-        result[i2 : i2 + window_size] += hanning_window*a2_rephased
+        result[i2 : i2 + window_size] += np.asarray(hanning_window*a2_rephased,dtype=np.float64)
 
     result = ((2**(16-4)) * result/result.max()) # normalize (16bit)
 
