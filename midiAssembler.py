@@ -1,5 +1,8 @@
 import midoTimes
 from midi_note import midi_from_file
+import pitchShifting as pitches
+
+from pydub import AudioSegment
 
 #Skeleton for assembling MIDI
 import mido
@@ -32,7 +35,7 @@ for c in xrange(1,len(midiSong.tracks)):
     #print "track len after",len(track)
 
     #Read in sound file
-    channelFile = "filename here"
+    channelFile = "meow1_shaggy.wav"
     sound = AudioSegment.from_wav(channelFile)
 
     #analyze sound for pitch
@@ -44,24 +47,22 @@ for c in xrange(1,len(midiSong.tracks)):
     for midiMsg in track:
         #print "note time ",midiMsg.time
 
-        newSound = sound.copy()
-
         #Get length of note
         #noteDur = note #in seconds
 
-        inNote = # midi note
-        inTicks = # midi note duration
+        inNote = midiMsg.note # midi note
+        inTicks = midiMsg.time # midi note duration
 
-        audioSize = ticksToSeconds(inTicks)
-        audioSize = int(round(1000*audioSize)) # Seconds to miliseconds
+        audioSize = midoTimes.ticksToSeconds(inTicks)
+        audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
         #Adjust audio file to size of note
         #Note: Will this change pitch of sound??
-        newSound = newSound[:audioSize]
+        newSound = sound[:audioSize]
 
         #Adjust audio to correct pitch
         pitchCorrection = inNote - pitch
-        newSound = shiftup(newSound,pitchCorrection)
+        newSound = pitches.shiftup(newSound,pitchCorrection)
 
         #soundClip+=newSound
 
