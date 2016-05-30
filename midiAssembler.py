@@ -53,7 +53,7 @@ for c in xrange(1,len(midiSong.tracks)):
         inNote = midiMsg.note # midi note
         inTicks = midiMsg.time # midi note duration
 
-        audioSize = midoTimes.ticksToSeconds(inTicks)
+        audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
         #Adjust audio file to size of note
@@ -62,7 +62,7 @@ for c in xrange(1,len(midiSong.tracks)):
 
         #Adjust audio to correct pitch
         pitchCorrection = inNote - pitch
-        newSound = pitches.shiftup(newSound,pitchCorrection)
+        newSound = pitches.pitchshift(newSound,pitchCorrection)
 
         #soundClip+=newSound
 
