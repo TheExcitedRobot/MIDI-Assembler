@@ -33,7 +33,27 @@ def midi_from_freq(freq):
     return shift
 
 
-signal, fs, enc = wavread("meow1_shaggy.wav")
-frequency = freq_from_fft(signal, fs)
-midiNum =  midi_from_freq(frequency)
-print int(round(midiNum))
+def midi_from_file(fileName):
+    signal, fs, enc = wavread(fileName)
+
+    # Compute Fourier transform of windowed signal
+    windowed = signal * blackmanharris(len(signal))
+    f = rfft(windowed)
+
+    # Find the peak and interpolate to get a more accurate peak
+    i = argmax(abs(f)) # Just use this for less-accurate, naive version
+    true_i = parabolic(log(abs(f)), i)[0]
+
+    # Convert to equivalent frequency
+    freq = fs * true_i / len(windowed)
+
+    shift = 12*math.log((freq/440),2)
+    midiNum = shift+69
+
+    return midiNum
+
+
+#signal, fs, enc = wavread("meow1_shaggy.wav")
+#frequency = freq_from_fft(signal, fs)
+#midiNum =  midi_from_freq(frequency)
+#print int(round(midiNum))
