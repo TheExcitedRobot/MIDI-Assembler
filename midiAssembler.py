@@ -1,3 +1,6 @@
+import midoTimes
+from midi_note import midi_from_file
+
 #Skeleton for assembling MIDI
 import mido
 
@@ -29,24 +32,36 @@ for c in xrange(1,len(midiSong.tracks)):
     #print "track len after",len(track)
 
     #Read in sound file
-    #sound = read("hi")
-    
+    channelFile = "filename here"
+    sound = AudioSegment.from_wav(channelFile)
+
     #analyze sound for pitch
-    #pitch = findPitch(sound)
+    pitch = midi_from_file(channelFile)
 
     #Create pydub clip
     soundClip = []
 
     for midiMsg in track:
         #print "note time ",midiMsg.time
+
+        newSound = sound.copy()
+
         #Get length of note
         #noteDur = note #in seconds
 
+        inNote = # midi note
+        inTicks = # midi note duration
+
+        audioSize = ticksToSeconds(inTicks)
+        audioSize = int(round(1000*audioSize)) # Seconds to miliseconds
+
         #Adjust audio file to size of note
         #Note: Will this change pitch of sound??
+        newSound = newSound[:audioSize]
 
         #Adjust audio to correct pitch
-        #newSound = shiftup(newSound,20)
+        pitchCorrection = inNote - pitch
+        newSound = shiftup(newSound,pitchCorrection)
 
         #soundClip+=newSound
 
