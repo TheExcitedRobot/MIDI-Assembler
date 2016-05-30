@@ -10,7 +10,7 @@ import mido
 #Read in MIDI file
 midiSong = mido.MidiFile('inMidi2.mid')
 
-outputClip = []
+outputClip = AudioSegment.silent(duration=.1)
 
 #Loop through all the channels of the midi song
 #Track 0 has meta data, but otherwise each channel seems to be on distinct track
@@ -36,13 +36,15 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Read in sound file
     channelFile = "meow1_shaggy.wav"
-    sound = AudioSegment.from_wav(channelFile)
+    newSound = AudioSegment.from_wav(channelFile)
+    from scipy.io import wavfile
+    frame_rate, sound = wavfile.read(channelFile)
 
     #analyze sound for pitch
     pitch = midi_from_file(channelFile)
 
     #Create pydub clip
-    soundClip = []
+#    soundClip = []
 
     for midiMsg in track:
         #print "note time ",midiMsg.time
@@ -58,17 +60,20 @@ for c in xrange(1,len(midiSong.tracks)):
 
         #Adjust audio file to size of note
         #Note: Will this change pitch of sound??
-        newSound = sound[:audioSize]
+        newSound = sound#[:audioSize]
 
         #Adjust audio to correct pitch
         pitchCorrection = inNote - pitch
         newSound = pitches.pitchshift(newSound,pitchCorrection)
+	newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
-        #soundClip+=newSound
+        outputClip = outputClip + newSound
 
     #overlay that sound clip with all others
     #outputClip.overlay(soundClip)
 
 #Write the sound to file
-#write(outputClip,"out.wav")
+out_f = open("cmidmeow.wav",'wb')
+outputClip.export(out_f,format='wav')
+
 
