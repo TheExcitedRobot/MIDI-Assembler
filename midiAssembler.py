@@ -57,14 +57,15 @@ for c in xrange(1,len(midiSong.tracks)):
         audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
-        #Adjust audio file to size of note
-        #Note: Will this change pitch of sound??
-        newSound = sound#[:audioSize]
-
+	newSound = sound
         #Adjust audio to correct pitch
         pitchCorrection = inNote - pitch
         newSound = pitches.pitchshift(newSound,pitchCorrection)
 	newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
+
+        #Adjust audio file to size of note
+        #Note: Will this change pitch of sound??
+        newSound = newSound[:audioSize]
 
         soundClip = soundClip + newSound
 
