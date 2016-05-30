@@ -1,11 +1,12 @@
 from __future__ import division
-from scikits.audiolab import wav
+from scikits.audiolab import wavread
 from numpy.fft import rfft, irfft
 from numpy import argmax, sqrt, mean, diff, log
 from matplotlib.mlab import find
 from scipy.signal import blackmanharris, fftconvolve
 from time import time
 import sys
+import math
 
 from parabolic import parabolic
 
@@ -34,4 +35,5 @@ def midi_from_freq(freq):
 
 signal, fs, enc = wavread("meow1_shaggy.wav")
 frequency = freq_from_fft(signal, fs)
-print midi_from_freq(frequency)
+midiNum =  midi_from_freq(frequency)
+print int(round(midiNum))
