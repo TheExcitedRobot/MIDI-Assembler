@@ -56,27 +56,24 @@ def convertSciToPyDub(channel,fps):
     )
     return audioSeg
 
-fps, bowl_sound = wavfile.read("whip_def.wav")
-tones = range(-25,25)
-#transposed = [pitchshift(bowl_sound, n) for n in tones]
-newSound = bowl_sound#pitchshift(bowl_sound,20)
+def test():
+    fps, bowl_sound = wavfile.read("whip_def.wav")
+    tones = range(-25,25)
+    #transposed = [pitchshift(bowl_sound, n) for n in tones]
+    newSound = bowl_sound#pitchshift(bowl_sound,20)
 
-#wavfile.write('whip20.wav',fps,newSound)#transposed[20])
+    #wavfile.write('whip20.wav',fps,newSound)#transposed[20])
 
-print "shape sound ",newSound.shape
+    print "shape sound ",newSound.shape
 
+    soundClip = convertSciToPyDub(newSound,fps)
+    for tone in tones:
+        #print "shifting by tone ",tone
+        shiftedClip = pitchshift(bowl_sound,tone)
+        soundClip = soundClip.append(convertSciToPyDub(shiftedClip,fps))
 
-
-
-
-soundClip = convertSciToPyDub(newSound,fps)
-for tone in tones:
-    #print "shifting by tone ",tone
-    shiftedClip = pitchshift(bowl_sound,tone)
-    soundClip = soundClip.append(convertSciToPyDub(shiftedClip,fps))
-
-out_f = open("whippd.wav",'wb')
-soundClip.export(out_f,format='wav')
+    out_f = open("whippd.wav",'wb')
+    soundClip.export(out_f,format='wav')
 
 
 
