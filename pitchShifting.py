@@ -3,7 +3,7 @@ from pydub import AudioSegment
 from scipy.io import wavfile
 
 """
-speedx, stretch, pitchshift 
+speedx, stretch, pitchshift
 From: http://zulko.github.io/blog/2014/03/29/soundstretching-and-pitch-shifting-in-python/
 """
 
@@ -74,6 +74,3 @@ def test():
 
     out_f = open("whippd.wav",'wb')
     soundClip.export(out_f,format='wav')
-
-
-

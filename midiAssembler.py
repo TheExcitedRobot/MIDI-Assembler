@@ -35,7 +35,7 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Read in sound file
     channelFile = "meow1_shaggy.wav"
-    sound = AudioSegment.from_wav(channelFile)
+    #sound = AudioSegment.from_wav(channelFile)
     from scipy.io import wavfile
     frame_rate, sound = wavfile.read(channelFile)
 
@@ -44,6 +44,9 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Create pydub clip
     soundClip = AudioSegment.silent(duration=.1)
+
+    # Value for base pitch
+    basePitch = -1
 
     for midiMsg in track:
         #print "note time ",midiMsg.time
@@ -57,16 +60,22 @@ for c in xrange(1,len(midiSong.tracks)):
         audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
-	newSound = sound
+	    newSound = sound
         #Adjust audio to correct pitch
-        pitchCorrection = inNote - pitch
+        if (basePitch == -1):
+            pitchCorrection = inNote - pitch
+            pitchCorrection = int(math.fmod(pitchCorrection, 12))
+            basePitch = inNote - pitchCorrection
+        else:
+            pitchCorrection = inNote - basePitch
+
         newSound = pitches.pitchshift(newSound,pitchCorrection)
-	newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
+        newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
         #Adjust audio file to size of note
         #Note: Will this change pitch of sound??
         newSound = newSound[:audioSize]
-
+        newSound = newSound.fade(to_gain=-120.0, end=audioSize, duration=audioSize/3)
         soundClip = soundClip + newSound
 
     #overlay that sound clip with all others
@@ -79,5 +88,3 @@ for c in xrange(1,len(midiSong.tracks)):
 #Write the sound to file
 out_f = open("cmidmeow.wav",'wb')
 outputClip.export(out_f,format='wav')
-
-
