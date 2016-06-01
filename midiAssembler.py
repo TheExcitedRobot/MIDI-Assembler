@@ -9,13 +9,13 @@ from pydub import AudioSegment
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('etherealGZ.mid')
+midiSong = mido.MidiFile('./midis/Movie_Themes_-_The_Pink_Panther_-_by_Henry_Mancini.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
 
 #Pitch the sound
 #and shorten its time
-def processNote(sound,pitchCorrection,time):
+def processNote(sound,pitchCorrection,time,frame_rate):
     newSound = pitches.pitchshift(sound,pitchCorrection)
     newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
@@ -94,11 +94,11 @@ for c in xrange(1,len(midiSong.tracks)):
             basePitch = inNote - pitchCorrection + 12
         
         #handle chords
-        chordSound = AudioSegment.silent(2)
+        chordSound = AudioSegment.silent(audioSize)
         for n in allNotes[midiMsg]:
             pitchCorrection = n-basePitch
-            newSound = processNote(sound,pitchCorrection,audioSize)
-            chordSound = newSound.overlay(chordSound)
+            newSound = processNote(sound,pitchCorrection,audioSize,frame_rate)
+            chordSound = chordSound.overlay(newSound)
 
         soundClip = soundClip + chordSound
 
@@ -110,5 +110,5 @@ for c in xrange(1,len(midiSong.tracks)):
         outputClip = soundClip.overlay(outputClip)
 
 #Write the sound to file
-out_f = open("cmidmeow.wav",'wb')
+out_f = open("outP.wav",'wb')
 outputClip.export(out_f,format='wav')
