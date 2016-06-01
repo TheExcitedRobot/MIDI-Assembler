@@ -17,7 +17,10 @@ outputClip = AudioSegment.silent(duration=.1)
 #Pitch the sound
 #and shorten its time
 def processNote(sound,pitchCorrection,time):
-    newSound = pitches.pitchshift(sound,pitchCorrection)
+    if(pitchCorrection !=0):
+        newSound = pitches.pitchshift(sound,pitchCorrection)
+    else:
+        newSound = sound
     newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
     #Adjust audio file to size of note
@@ -38,6 +41,8 @@ def drumChannels():
             frame_rate, sound = wavfile.read(channelFile)
             drumSound[index] = sound
             drumSound[index] = frame_rate
+
+    return drumSound, drumFramerate
 
 #Loop through all the channels of the midi song
 #Track 0 has meta data, but otherwise each channel seems to be on distinct track
@@ -75,17 +80,21 @@ for c in xrange(1,len(midiSong.tracks)):
     #print "track len after",len(track)
 
     #Read in sound file
-    channelFile = "./channels/channel"+str(c)+".wav"
+    curChannel = track[0].channel
+    print "Current Channel ="+curChannel
+    if(curChannel != 9):
+        channelFile = "./channels/channel"+str(c)+".wav"
 
-    drumDict = drumChannels()
+        #sound = AudioSegment.from_wav(channelFile)
 
-    #sound = AudioSegment.from_wav(channelFile)
+        frame_rate, sound = wavfile.read(channelFile)
 
-    frame_rate, sound = wavfile.read(channelFile)
+        #analyze sound for pitch
+        pitch = midi_from_file(channelFile) % 12
 
-    #analyze sound for pitch
-    pitch = midi_from_file(channelFile) % 12
-
+    else:
+        drumS, drumF = drumChannels()
+        pitch = 0
     #Create pydub clip
     soundClip = AudioSegment.silent(duration=.1)
 
@@ -105,7 +114,7 @@ for c in xrange(1,len(midiSong.tracks)):
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
         #Adjust audio to correct pitch
-        if (basePitch == -1):
+        if (basePitch == -1 && curChannel != 9):
             pitchCorrection = inNote - pitch
             pitchCorrection = int(math.fmod(pitchCorrection, 12))
             basePitch = inNote - pitchCorrection + 12
@@ -113,9 +122,15 @@ for c in xrange(1,len(midiSong.tracks)):
         #handle chords
         chordSound = AudioSegment.silent(2)
         for n in allNotes[midiMsg]:
-            pitchCorrection = n-basePitch
-            newSound = processNote(sound,pitchCorrection,audioSize)
-            chordSound = newSound.overlay(chordSound)
+            if (curChannel != 9):
+                pitchCorrection = n-basePitch
+                newSound = processNote(sound,pitchCorrection,audioSize)
+            else:
+                if n in drumS:
+                    newSound = processNote(drumS[n], 0, audioSize)
+                    chordSound = newSound.overlay(chordSound)
+                else:
+                    print 'Percussion Instrument ' + n + ' has no provided sound, will skip'
 
         soundClip = soundClip + chordSound
 
