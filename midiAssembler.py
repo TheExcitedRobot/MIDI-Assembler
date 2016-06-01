@@ -2,9 +2,10 @@ import midoTimes
 from midi_note import midi_from_file
 import pitchShifting as pitches
 import math
-
+import os
 from pydub import AudioSegment
-
+import re
+from scipy.io import wavfile
 #Skeleton for assembling MIDI
 import mido
 
@@ -24,6 +25,19 @@ def processNote(sound,pitchCorrection,time):
     newSound = newSound[:time]
     newSound = newSound.fade(to_gain=-120.0, end=audioSize, duration=audioSize/3)
     return newSound
+
+def drumChannels():
+    drumSound = {}
+    drumFramerate = {}
+    pattern = re.compile(r"(^drums)(\d+)")
+    for file in os.listdir "/channels"
+        regG = pattern.match(file)
+        if (regG != None):
+            channelFile = "./channels/"+regG.group(0)+".wav"
+            index = int(regG.group(2))
+            frame_rate, sound = wavfile.read(channelFile)
+            drumSound[index] = sound
+            drumSound[index] = frame_rate
 
 #Loop through all the channels of the midi song
 #Track 0 has meta data, but otherwise each channel seems to be on distinct track
@@ -62,8 +76,11 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Read in sound file
     channelFile = "./channels/channel"+str(c)+".wav"
+
+    drumDict = drumChannels()
+
     #sound = AudioSegment.from_wav(channelFile)
-    from scipy.io import wavfile
+
     frame_rate, sound = wavfile.read(channelFile)
 
     #analyze sound for pitch
@@ -92,7 +109,7 @@ for c in xrange(1,len(midiSong.tracks)):
             pitchCorrection = inNote - pitch
             pitchCorrection = int(math.fmod(pitchCorrection, 12))
             basePitch = inNote - pitchCorrection + 12
-        
+
         #handle chords
         chordSound = AudioSegment.silent(2)
         for n in allNotes[midiMsg]:
