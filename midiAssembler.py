@@ -10,13 +10,13 @@ from scipy.io import wavfile
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('etherealGZ.mid')
+midiSong = mido.MidiFile('./midis/Movie_Themes_-_The_Pink_Panther_-_by_Henry_Mancini.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
 
 #Pitch the sound
 #and shorten its time
-def processNote(sound,pitchCorrection,time):
+def processNote(sound,pitchCorrection,time,frame_rate):
     if(pitchCorrection !=0):
         newSound = pitches.pitchshift(sound,pitchCorrection)
     else:
@@ -120,7 +120,7 @@ for c in xrange(1,len(midiSong.tracks)):
             basePitch = inNote - pitchCorrection + 12
 
         #handle chords
-        chordSound = AudioSegment.silent(2)
+        chordSound = AudioSegment.silent(audioSize)
         for n in allNotes[midiMsg]:
             if (curChannel != 9):
                 pitchCorrection = n-basePitch
@@ -142,5 +142,5 @@ for c in xrange(1,len(midiSong.tracks)):
         outputClip = soundClip.overlay(outputClip)
 
 #Write the sound to file
-out_f = open("cmidmeow.wav",'wb')
+out_f = open("outP.wav",'wb')
 outputClip.export(out_f,format='wav')
