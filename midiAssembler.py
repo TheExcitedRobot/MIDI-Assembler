@@ -9,9 +9,21 @@ from pydub import AudioSegment
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('inMidi2.mid')
+midiSong = mido.MidiFile('etherealGZ.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
+
+#Pitch the sound
+#and shorten its time
+def processNote(sound,pitchCorrection,time):
+    newSound = pitches.pitchshift(sound,pitchCorrection)
+    newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
+
+    #Adjust audio file to size of note
+    #Note: Will this change pitch of sound??
+    newSound = newSound[:time]
+    newSound = newSound.fade(to_gain=-120.0, end=audioSize, duration=audioSize/3)
+    return newSound
 
 #Loop through all the channels of the midi song
 #Track 0 has meta data, but otherwise each channel seems to be on distinct track
@@ -23,12 +35,26 @@ for c in xrange(1,len(midiSong.tracks)):
     #Combine those together into one long section of 240 ticks
     #Also take out all the meta messages, just get notes
     track = midiSong.tracks[c]
+    allNotes = {}
     #print "track len before ",len(track)
     for i in reversed(xrange(0,len(track))):
         #print "msg[",i,"]:",track[i]
         if not hasattr(track[i],'velocity'):
             track.pop(i)
-        elif track[i].velocity == 0:
+	else:
+            allNotes[track[i]] = [track[i].note]
+            #track[i].note = [track[i].note]
+    for i in reversed(xrange(0,len(track))):
+        if track[i].time == 0:
+	    #part of a chord, combine into one
+            if i>0 and hasattr(track[i-1],'note'):
+                curMsg = track.pop(i)
+                #track[i-1].notes = track[i-1].note + curMsg.notes
+                #setattr(track[i-1],'notes',track[i-1].notes+curMsg.notes)
+                allNotes[track[i-1]] += allNotes[curMsg]
+    for i in reversed(xrange(1,len(track))):
+        if track[i].velocity == 0:
+            #note being held down
             if i>0 and hasattr(track[i-1],'velocity') and track[i-1].velocity!=0:
                 curMsg = track.pop(i)
                 track[i-1].time += curMsg.time
@@ -61,23 +87,20 @@ for c in xrange(1,len(midiSong.tracks)):
         audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
-	newSound = sound
         #Adjust audio to correct pitch
         if (basePitch == -1):
             pitchCorrection = inNote - pitch
             pitchCorrection = int(math.fmod(pitchCorrection, 12))
             basePitch = inNote - pitchCorrection + 12
-        else:
-            pitchCorrection = inNote - basePitch
+        
+        #handle chords
+        chordSound = AudioSegment.silent(2)
+        for n in allNotes[midiMsg]:
+            pitchCorrection = n-basePitch
+            newSound = processNote(sound,pitchCorrection,audioSize)
+            chordSound = newSound.overlay(chordSound)
 
-        newSound = pitches.pitchshift(newSound,pitchCorrection)
-        newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
-
-        #Adjust audio file to size of note
-        #Note: Will this change pitch of sound??
-        newSound = newSound[:audioSize]
-        newSound = newSound.fade(to_gain=-120.0, end=audioSize, duration=audioSize/3)
-        soundClip = soundClip + newSound
+        soundClip = soundClip + chordSound
 
     #overlay that sound clip with all others
     #    segment that is overlayed is truncated, so pick longer one as base
