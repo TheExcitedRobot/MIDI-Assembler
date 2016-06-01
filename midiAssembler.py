@@ -130,6 +130,7 @@ for c in xrange(1,len(midiSong.tracks)):
 				else:
 					if n in drumS:
 						newSound = processNote(drumS[n], 0, audioSize, drumF[n])
+                        newSound = newSound.apply_gain(-3)
 						chordSound = newSound.overlay(chordSound)
 					else:
 						print 'Percussion Instrument ', n,' has no provided sound, will skip'
