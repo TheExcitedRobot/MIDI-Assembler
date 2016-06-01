@@ -55,7 +55,7 @@ for c in xrange(1,len(midiSong.tracks)):
         #Get length of note
         #noteDur = note #in seconds
 
-        inNote = midiMsg.note % 12 # midi note
+        inNote = midiMsg.note # midi note
         inTicks = midiMsg.time # midi note duration
 
         audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
@@ -66,7 +66,7 @@ for c in xrange(1,len(midiSong.tracks)):
         if (basePitch == -1):
             pitchCorrection = inNote - pitch
             pitchCorrection = int(math.fmod(pitchCorrection, 12))
-            basePitch = inNote - pitchCorrection
+            basePitch = inNote - pitchCorrection + 12
         else:
             pitchCorrection = inNote - basePitch
 
