@@ -15,7 +15,6 @@ outputClip = AudioSegment.silent(duration=.1)
 #Loop through all the channels of the midi song
 #Track 0 has meta data, but otherwise each channel seems to be on distinct track
 for c in xrange(1,len(midiSong.tracks)):
-    
     print "Converting channel ",c
 
     #MIDI notes have multiple parts per same note
@@ -36,15 +35,15 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Read in sound file
     channelFile = "meow1_shaggy.wav"
-    newSound = AudioSegment.from_wav(channelFile)
+    sound = AudioSegment.from_wav(channelFile)
     from scipy.io import wavfile
     frame_rate, sound = wavfile.read(channelFile)
 
     #analyze sound for pitch
-    pitch = midi_from_file(channelFile)
+    pitch = midi_from_file(channelFile) % 12
 
     #Create pydub clip
-#    soundClip = []
+    soundClip = AudioSegment.silent(duration=.1)
 
     for midiMsg in track:
         #print "note time ",midiMsg.time
@@ -52,25 +51,30 @@ for c in xrange(1,len(midiSong.tracks)):
         #Get length of note
         #noteDur = note #in seconds
 
-        inNote = midiMsg.note # midi note
+        inNote = midiMsg.note % 12 # midi note
         inTicks = midiMsg.time # midi note duration
 
         audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
-        #Adjust audio file to size of note
-        #Note: Will this change pitch of sound??
-        newSound = sound#[:audioSize]
-
+	newSound = sound
         #Adjust audio to correct pitch
         pitchCorrection = inNote - pitch
         newSound = pitches.pitchshift(newSound,pitchCorrection)
 	newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
-        outputClip = outputClip + newSound
+        #Adjust audio file to size of note
+        #Note: Will this change pitch of sound??
+        newSound = newSound[:audioSize]
+
+        soundClip = soundClip + newSound
 
     #overlay that sound clip with all others
-    #outputClip.overlay(soundClip)
+    #    segment that is overlayed is truncated, so pick longer one as base
+    if len(outputClip)>len(soundClip):
+    	outputClip = outputClip.overlay(soundClip)
+    else:
+        outputClip = soundClip.overlay(outputClip)
 
 #Write the sound to file
 out_f = open("cmidmeow.wav",'wb')
