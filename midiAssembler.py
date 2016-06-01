@@ -10,7 +10,7 @@ from scipy.io import wavfile
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('./midis/Movie_Themes_-_The_Pink_Panther_-_by_Henry_Mancini.mid')
+midiSong = mido.MidiFile('percussion.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
 
@@ -32,15 +32,16 @@ def processNote(sound,pitchCorrection,time,frame_rate):
 def drumChannels():
     drumSound = {}
     drumFramerate = {}
-    pattern = re.compile(r"(^drums)(\d+)")
-    for file in os.listdir "/channels"
+    baseDir = "./drums/"
+    pattern = re.compile(r"(^drum)(\d+)")
+    for file in os.listdir(baseDir):
         regG = pattern.match(file)
         if (regG != None):
-            channelFile = "./channels/"+regG.group(0)+".wav"
+            channelFile = baseDir+regG.group(0)+".wav"
             index = int(regG.group(2))
             frame_rate, sound = wavfile.read(channelFile)
             drumSound[index] = sound
-            drumSound[index] = frame_rate
+            drumFramerate[index] = frame_rate
 
     return drumSound, drumFramerate
 
@@ -81,7 +82,7 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Read in sound file
     curChannel = track[0].channel
-    print "Current Channel ="+curChannel
+    print "Current Channel =",curChannel
     if(curChannel != 9):
         channelFile = "./channels/channel"+str(c)+".wav"
 
@@ -114,7 +115,7 @@ for c in xrange(1,len(midiSong.tracks)):
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
         #Adjust audio to correct pitch
-        if (basePitch == -1 && curChannel != 9):
+        if (basePitch == -1 and curChannel != 9):
             pitchCorrection = inNote - pitch
             pitchCorrection = int(math.fmod(pitchCorrection, 12))
             basePitch = inNote - pitchCorrection + 12
@@ -127,10 +128,10 @@ for c in xrange(1,len(midiSong.tracks)):
                 newSound = processNote(sound,pitchCorrection,audioSize)
             else:
                 if n in drumS:
-                    newSound = processNote(drumS[n], 0, audioSize)
+                    newSound = processNote(drumS[n], 0, audioSize, drumF[n])
                     chordSound = newSound.overlay(chordSound)
                 else:
-                    print 'Percussion Instrument ' + n + ' has no provided sound, will skip'
+                    print 'Percussion Instrument ', n,' has no provided sound, will skip'
 
         soundClip = soundClip + chordSound
 
