@@ -34,7 +34,7 @@ for c in xrange(1,len(midiSong.tracks)):
     #print "track len after",len(track)
 
     #Read in sound file
-    channelFile = "meow1_shaggy.wav"
+    channelFile = "./sounds/meow1_shaggy.wav"
     #sound = AudioSegment.from_wav(channelFile)
     from scipy.io import wavfile
     frame_rate, sound = wavfile.read(channelFile)
