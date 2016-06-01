@@ -85,14 +85,14 @@ for c in xrange(1,len(midiSong.tracks)):
 		curChannel = track[0].channel
 		print "Current Channel =",curChannel
 		if(curChannel != 9):
-			channelFile = "./channels/channel"+str(c)+".wav"
+			channelFile = "./channels/channel"+str(curChannel)+".wav"
 		
 			#sound = AudioSegment.from_wav(channelFile)
 		
 			frame_rate, sound = wavfile.read(channelFile)
 		
 			#analyze sound for pitch
-			pitch = midi_from_file(channelFile) % 12
+			pitch = midi_from_file(channelFile)
 		
 		else:
 			drumS, drumF = drumChannels()
@@ -126,14 +126,14 @@ for c in xrange(1,len(midiSong.tracks)):
 			for n in allNotes[midiMsg]:
 				if (curChannel != 9):
 					pitchCorrection = n-basePitch
-					newSound = processNote(sound,pitchCorrection,audioSize)
+					newSound = processNote(sound,pitchCorrection,audioSize,frame_rate)
 				else:
 					if n in drumS:
 						newSound = processNote(drumS[n], 0, audioSize, drumF[n])
-						chordSound = newSound.overlay(chordSound)
 					else:
 						print 'Percussion Instrument ', n,' has no provided sound, will skip'
 		
+			chordSound = newSound.overlay(chordSound)
 			soundClip = soundClip + chordSound
 		
 		#overlay that sound clip with all others
