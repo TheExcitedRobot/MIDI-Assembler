@@ -82,66 +82,66 @@ for c in xrange(1,len(midiSong.tracks)):
 
     #Read in sound file
     if(len(track)>0):
-    curChannel = track[0].channel
-    print "Current Channel =",curChannel
-    if(curChannel != 9):
-        channelFile = "./channels/channel"+str(c)+".wav"
-
-        #sound = AudioSegment.from_wav(channelFile)
-
-        frame_rate, sound = wavfile.read(channelFile)
-
-        #analyze sound for pitch
-        pitch = midi_from_file(channelFile) % 12
-
-    else:
-        drumS, drumF = drumChannels()
-        pitch = 0
-    #Create pydub clip
-    soundClip = AudioSegment.silent(duration=.1)
-
-    # Value for base pitch
-    basePitch = -1
-
-    for midiMsg in track:
-        #print "note time ",midiMsg.time
-
-        #Get length of note
-        #noteDur = note #in seconds
-
-        inNote = midiMsg.note # midi note
-        inTicks = midiMsg.time # midi note duration
-
-        audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
-        audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
-
-        #Adjust audio to correct pitch
-        if (basePitch == -1 and curChannel != 9):
-            pitchCorrection = inNote - pitch
-            pitchCorrection = int(math.fmod(pitchCorrection, 12))
-            basePitch = inNote - pitchCorrection + 12
-
-        #handle chords
-        chordSound = AudioSegment.silent(audioSize)
-        for n in allNotes[midiMsg]:
-            if (curChannel != 9):
-                pitchCorrection = n-basePitch
-                newSound = processNote(sound,pitchCorrection,audioSize)
-            else:
-                if n in drumS:
-                    newSound = processNote(drumS[n], 0, audioSize, drumF[n])
-                    chordSound = newSound.overlay(chordSound)
-                else:
-                    print 'Percussion Instrument ', n,' has no provided sound, will skip'
-
-        soundClip = soundClip + chordSound
-
-    #overlay that sound clip with all others
-    #    segment that is overlayed is truncated, so pick longer one as base
-    if len(outputClip)>len(soundClip):
-    	outputClip = outputClip.overlay(soundClip)
-    else:
-        outputClip = soundClip.overlay(outputClip)
+		curChannel = track[0].channel
+		print "Current Channel =",curChannel
+		if(curChannel != 9):
+			channelFile = "./channels/channel"+str(c)+".wav"
+		
+			#sound = AudioSegment.from_wav(channelFile)
+		
+			frame_rate, sound = wavfile.read(channelFile)
+		
+			#analyze sound for pitch
+			pitch = midi_from_file(channelFile) % 12
+		
+		else:
+			drumS, drumF = drumChannels()
+			pitch = 0
+		#Create pydub clip
+		soundClip = AudioSegment.silent(duration=.1)
+		
+		# Value for base pitch
+		basePitch = -1
+		
+		for midiMsg in track:
+			#print "note time ",midiMsg.time
+		
+			#Get length of note
+			#noteDur = note #in seconds
+		
+			inNote = midiMsg.note # midi note
+			inTicks = midiMsg.time # midi note duration
+		
+			audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
+			audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
+		
+			#Adjust audio to correct pitch
+			if (basePitch == -1 and curChannel != 9):
+				pitchCorrection = inNote - pitch
+				pitchCorrection = int(math.fmod(pitchCorrection, 12))
+				basePitch = inNote - pitchCorrection + 12
+		
+			#handle chords
+			chordSound = AudioSegment.silent(audioSize)
+			for n in allNotes[midiMsg]:
+				if (curChannel != 9):
+					pitchCorrection = n-basePitch
+					newSound = processNote(sound,pitchCorrection,audioSize)
+				else:
+					if n in drumS:
+						newSound = processNote(drumS[n], 0, audioSize, drumF[n])
+						chordSound = newSound.overlay(chordSound)
+					else:
+						print 'Percussion Instrument ', n,' has no provided sound, will skip'
+		
+			soundClip = soundClip + chordSound
+		
+		#overlay that sound clip with all others
+		#    segment that is overlayed is truncated, so pick longer one as base
+		if len(outputClip)>len(soundClip):
+			outputClip = outputClip.overlay(soundClip)
+		else:
+			outputClip = soundClip.overlay(outputClip)
 
 #Write the sound to file
 out_f = open("outP.wav",'wb')
