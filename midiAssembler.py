@@ -10,7 +10,7 @@ from scipy.io import wavfile
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('percussion.mid')
+midiSong = mido.MidiFile('midis/Movie_Themes_-_The_Pink_Panther_-_by_Henry_Mancini.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
 
@@ -81,6 +81,7 @@ for c in xrange(1,len(midiSong.tracks)):
     #print "track len after",len(track)
 
     #Read in sound file
+    if(len(track)>0):
     curChannel = track[0].channel
     print "Current Channel =",curChannel
     if(curChannel != 9):
