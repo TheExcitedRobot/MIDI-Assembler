@@ -30,7 +30,6 @@ def ticksToSeconds(ticks,song):
 
 
 def testFindTempo():
-    mid = MidiFile('inMidi2.mid')
     tempo = findTempo(mid)
     print "how long 240 ticks",ticksToSeconds(240,mid)
     print "tempo (microseconds per beat?)",tempo
