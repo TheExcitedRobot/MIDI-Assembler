@@ -130,6 +130,7 @@ for c in xrange(1,len(midiSong.tracks)):
 				else:
 					if n in drumS:
 						newSound = processNote(drumS[n], 0, audioSize, drumF[n])
+                                                newSound = newSound.apply_gain(-3)
 					else:
 						print 'Percussion Instrument ', n,' has no provided sound, will skip'
 		
@@ -146,3 +147,4 @@ for c in xrange(1,len(midiSong.tracks)):
 #Write the sound to file
 out_f = open("outP.wav",'wb')
 outputClip.export(out_f,format='wav')
+
