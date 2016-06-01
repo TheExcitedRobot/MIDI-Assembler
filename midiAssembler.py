@@ -1,6 +1,7 @@
 import midoTimes
 from midi_note import midi_from_file
 import pitchShifting as pitches
+import math
 
 from pydub import AudioSegment
 
@@ -60,7 +61,7 @@ for c in xrange(1,len(midiSong.tracks)):
         audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
         audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 
-	    newSound = sound
+	newSound = sound
         #Adjust audio to correct pitch
         if (basePitch == -1):
             pitchCorrection = inNote - pitch
