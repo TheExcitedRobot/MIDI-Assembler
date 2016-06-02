@@ -26,7 +26,7 @@ def processNote(sound,pitchCorrection,time,frame_rate):
     timeSound = len(newSound)/(frame_rate*1.0) #this is % of second
     timeSound *= 1000.0 #now in milliseconds
     if(timeSound<time):
-        print "sound is shorter by ",time-timeSound,"time: ",time,"timeSound: ",timeSound
+        #print "sound is shorter by ",time-timeSound,"time: ",time,"timeSound: ",timeSound
     	speedFactor = (time)/timeSound
     	newSound = pitches.stretch(newSound,speedFactor,2**13,2**11)#good defaults I think
     
@@ -70,25 +70,40 @@ for c in xrange(1,len(midiSong.tracks)):
         #print "msg[",i,"]:",track[i]
         if not hasattr(track[i],'velocity'):
             track.pop(i)
-	elif track[i].type == 'note_on':
+	elif track[i].type == 'note_on' or track[i].type == 'note_off':
             allNotes[track[i]] = [track[i].note]
-        else:
-            allNotes[track[i]] = [] # note_off
-            #track[i].note = [track[i].note]
+    #set time for each note based on note_off signals
+    allTimes = {}
     for i in reversed(xrange(0,len(track))):
-        if track[i].time == 0:
+        if(track[i].type=='note_off'):
+            startNote = track[i].note
+            timeSoFar = track[i].time
+            j = i-1
+            while(j>0 and startNote!=track[j].note): 
+                timeSoFar += track[j].time
+                j -= 1
+            #we found matching note (or are at bottom)
+            allTimes[track[j]] = timeSoFar
+    #go through, clean out note_offs
+    for i in reversed(xrange(0,len(track))):
+        if(track[i].type=='note_off'):
+            track.pop(i)
+    #combine chords
+    for i in reversed(xrange(0,len(track))):
+        if track[i].velocity == 0 and track[i].time == 0:
             curMsg = track.pop(i)
 	    #part of a chord, combine into one
             if i>0 and hasattr(track[i-1],'note'):
                 #track[i-1].notes = track[i-1].note + curMsg.notes
                 #setattr(track[i-1],'notes',track[i-1].notes+curMsg.notes)
                 allNotes[track[i-1]] += allNotes[curMsg]
-    for i in reversed(xrange(1,len(track))):
-        if track[i].velocity == 0 and track[i].type=='note_on':
-            #note being held down
-            curMsg = track.pop(i)
-            if i>0 and hasattr(track[i-1],'velocity') and track[i-1].velocity!=0:
-                track[i-1].time += curMsg.time
+    #add in silence - TODO: this isn't quite correct
+        #and set time to duration of note
+    for i in reversed(xrange(0,len(track))):
+        #if(track[i].time!=0):
+        #    track.insert(mido.Message('stop',time=track[i].time),i)
+        track[i].time = allTimes[track[i]]
+
     #print "track len after",len(track)
 
     #Read in sound file
@@ -120,7 +135,6 @@ for c in xrange(1,len(midiSong.tracks)):
 			#Get length of note
 			#noteDur = note #in seconds
 		
-			inNote = midiMsg.note # midi note
 			inTicks = midiMsg.time # midi note duration
                         #if(inTicks<10):
                         #print "inkTicks too small",inTicks,"msg type: ",midiMsg.type
@@ -128,7 +142,9 @@ for c in xrange(1,len(midiSong.tracks)):
 			audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
 			audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 		
-			#Adjust audio to correct pitch
+			inNote = midiMsg.note # midi note
+			
+                        #Adjust audio to correct pitch
 			if (basePitch == -1 and curChannel != 9):
 				pitchCorrection = inNote - pitch
 				pitchCorrection = int(math.fmod(pitchCorrection, 12))
