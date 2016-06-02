@@ -10,17 +10,26 @@ from scipy.io import wavfile
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('midis/Movie_Themes_-_The_Pink_Panther_-_by_Henry_Mancini.mid')
+midiSong = mido.MidiFile('midis/Dvorak_midi-seq-by-Ong_Cmu_-_Humoresque_Devorak.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
 
 #Pitch the sound
-#and shorten its time
+#and shorten its time -  time in milliseconds I think
 def processNote(sound,pitchCorrection,time,frame_rate):
     if(pitchCorrection !=0):
         newSound = pitches.pitchshift(sound,pitchCorrection)
     else:
         newSound = sound
+    
+    #try stretching sound
+    timeSound = len(newSound)/(frame_rate*1.0) #this is % of second
+    timeSound *= 1000.0 #now in milliseconds
+    if(timeSound<time):
+        #print "sound is shorter by ",time-timeSound,"time: ",time,"timeSound: ",timeSound
+    	speedFactor = (time)/timeSound
+    	newSound = pitches.stretch(newSound,speedFactor,2**13,2**11)#good defaults I think
+    
     newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
     #Adjust audio file to size of note
@@ -61,23 +70,40 @@ for c in xrange(1,len(midiSong.tracks)):
         #print "msg[",i,"]:",track[i]
         if not hasattr(track[i],'velocity'):
             track.pop(i)
-	else:
+	elif track[i].type == 'note_on' or track[i].type == 'note_off':
             allNotes[track[i]] = [track[i].note]
-            #track[i].note = [track[i].note]
+    #set time for each note based on note_off signals
+    allTimes = {}
     for i in reversed(xrange(0,len(track))):
-        if track[i].time == 0:
+        if(track[i].type=='note_off'):
+            startNote = track[i].note
+            timeSoFar = track[i].time
+            j = i-1
+            while(j>0 and startNote!=track[j].note): 
+                timeSoFar += track[j].time
+                j -= 1
+            #we found matching note (or are at bottom)
+            allTimes[track[j]] = timeSoFar
+    #go through, clean out note_offs
+    for i in reversed(xrange(0,len(track))):
+        if(track[i].type=='note_off'):
+            track.pop(i)
+    #combine chords
+    for i in reversed(xrange(0,len(track))):
+        if track[i].velocity == 0 and track[i].time == 0:
+            curMsg = track.pop(i)
 	    #part of a chord, combine into one
             if i>0 and hasattr(track[i-1],'note'):
-                curMsg = track.pop(i)
                 #track[i-1].notes = track[i-1].note + curMsg.notes
                 #setattr(track[i-1],'notes',track[i-1].notes+curMsg.notes)
                 allNotes[track[i-1]] += allNotes[curMsg]
-    for i in reversed(xrange(1,len(track))):
-        if track[i].velocity == 0:
-            #note being held down
-            if i>0 and hasattr(track[i-1],'velocity') and track[i-1].velocity!=0:
-                curMsg = track.pop(i)
-                track[i-1].time += curMsg.time
+    #add in silence - TODO: this isn't quite correct
+        #and set time to duration of note
+    for i in reversed(xrange(0,len(track))):
+        #if(track[i].time!=0):
+        #    track.insert(mido.Message('stop',time=track[i].time),i)
+        track[i].time = allTimes[track[i]]
+
     #print "track len after",len(track)
 
     #Read in sound file
@@ -109,13 +135,16 @@ for c in xrange(1,len(midiSong.tracks)):
 			#Get length of note
 			#noteDur = note #in seconds
 		
-			inNote = midiMsg.note # midi note
 			inTicks = midiMsg.time # midi note duration
+                        #if(inTicks<10):
+                        #print "inkTicks too small",inTicks,"msg type: ",midiMsg.type
 		
 			audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
 			audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
 		
-			#Adjust audio to correct pitch
+			inNote = midiMsg.note # midi note
+			
+                        #Adjust audio to correct pitch
 			if (basePitch == -1 and curChannel != 9):
 				pitchCorrection = inNote - pitch
 				pitchCorrection = int(math.fmod(pitchCorrection, 12))
@@ -123,14 +152,15 @@ for c in xrange(1,len(midiSong.tracks)):
 		
 			#handle chords
 			chordSound = AudioSegment.silent(audioSize)
-			for n in allNotes[midiMsg]:
+			newSound = AudioSegment.silent(audioSize)
+                        for n in allNotes[midiMsg]:
 				if (curChannel != 9):
 					pitchCorrection = n-basePitch
 					newSound = processNote(sound,pitchCorrection,audioSize,frame_rate)
 				else:
 					if n in drumS:
 						newSound = processNote(drumS[n], 0, audioSize, drumF[n])
-                                                newSound = newSound.apply_gain(-3)
+                                                newSound = newSound.apply_gain(-5)
 					else:
 						print 'Percussion Instrument ', n,' has no provided sound, will skip'
 		
