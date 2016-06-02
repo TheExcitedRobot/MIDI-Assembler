@@ -10,7 +10,7 @@ from scipy.io import wavfile
 import mido
 
 #Read in MIDI file
-midiSong = mido.MidiFile('midis/Dvorak_midi-seq-by-Ong_Cmu_-_Humoresque_Devorak.mid')
+midiSong = mido.MidiFile('twelveBZ.mid')
 
 outputClip = AudioSegment.silent(duration=.1)
 
@@ -28,7 +28,7 @@ def processNote(sound,pitchCorrection,time,frame_rate):
     if(timeSound<time):
         #print "sound is shorter by ",time-timeSound,"time: ",time,"timeSound: ",timeSound
     	speedFactor = (time)/timeSound
-    	newSound = pitches.stretch(newSound,speedFactor,2**13,2**11)#good defaults I think
+    	#newSound = pitches.stretch(newSound,speedFactor,2**13,2**11)#good defaults I think
     
     newSound = pitches.convertSciToPyDub(newSound,frame_rate)#sound.frame_rate)
 
@@ -54,6 +54,33 @@ def drumChannels():
 
     return drumSound, drumFramerate
 
+#Return dictionary with times of each note (by moving deltaTime to previous Note)
+#   useNoteOn0 - whether to count note_on msgs with velocity 0 as note_off msgs
+def generateTimes(track,useNoteOn0=0):
+    #set time for each note based on note_off signals
+    allTimes = {}
+    for i in reversed(xrange(0,len(track))):
+        if(track[i].type=='note_off' or (useNoteOn0 and track[i].type=='note_on' and track[i].velocity==0)):
+            startNote = track[i].note
+            timeSoFar = track[i].time
+            j = i-1
+            while(j>0 and startNote!=track[j].note): 
+                timeSoFar += track[j].time
+                j -= 1
+            #we found matching note (or are at bottom)
+            allTimes[track[j]] = timeSoFar
+    if(len(allTimes)==0 and len(track)>0):
+        #jython MIDI seem to be formatted different/lazier. Convert note_on with velocity 0 into note_off commands, retry
+        numConverted = 0
+        for i in reversed(xrange(0,len(track))):
+            if(track[i].type=='note_on' and track[i].velocity==0):
+                #track[i].type = 'note_off'
+                numConverted+=1
+        if(numConverted>0):
+            return generateTimes(track,1)
+    return allTimes
+    
+
 #Loop through all the channels of the midi song
 #Track 0 has meta data, but otherwise each channel seems to be on distinct track
 for c in xrange(1,len(midiSong.tracks)):
@@ -73,6 +100,7 @@ for c in xrange(1,len(midiSong.tracks)):
 	elif track[i].type == 'note_on' or track[i].type == 'note_off':
             allNotes[track[i]] = [track[i].note]
     #set time for each note based on note_off signals
+    """
     allTimes = {}
     for i in reversed(xrange(0,len(track))):
         if(track[i].type=='note_off'):
@@ -84,6 +112,8 @@ for c in xrange(1,len(midiSong.tracks)):
                 j -= 1
             #we found matching note (or are at bottom)
             allTimes[track[j]] = timeSoFar
+    """
+    allTimes = generateTimes(track)
     #go through, clean out note_offs
     for i in reversed(xrange(0,len(track))):
         if(track[i].type=='note_off'):
@@ -101,9 +131,11 @@ for c in xrange(1,len(midiSong.tracks)):
         #and set time to duration of note
     for i in reversed(xrange(0,len(track))):
         curTime = track[i].time
-        track[i].time = allTimes[track[i]]
-        if(curTime!=0):
-            track.insert(i,mido.Message('aftertouch',time=curTime,channel=track[i].channel))
+        if track[i] in allTimes:
+            track[i].time = allTimes[track[i]]
+            if(curTime!=0):
+                track.insert(i,mido.Message('aftertouch',time=curTime,channel=track[i].channel))
+            
 
     #print "track len after",len(track)
 
