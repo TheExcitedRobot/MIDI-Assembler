@@ -100,9 +100,10 @@ for c in xrange(1,len(midiSong.tracks)):
     #add in silence - TODO: this isn't quite correct
         #and set time to duration of note
     for i in reversed(xrange(0,len(track))):
-        #if(track[i].time!=0):
-        #    track.insert(mido.Message('stop',time=track[i].time),i)
+        curTime = track[i].time
         track[i].time = allTimes[track[i]]
+        if(curTime!=0):
+            track.insert(i,mido.Message('aftertouch',time=curTime,channel=track[i].channel))
 
     #print "track len after",len(track)
 
@@ -141,19 +142,24 @@ for c in xrange(1,len(midiSong.tracks)):
 		
 			audioSize = midoTimes.ticksToSeconds(inTicks,midiSong)
 			audioSize = int(round(1000.0*audioSize)) # Seconds to miliseconds
-		
-			inNote = midiMsg.note # midi note
+
+                        if midiMsg.type=='aftertouch':
+                            #just insert silence
+                            soundClip += AudioSegment.silent(audioSize)		
+                        else:
+
+			    inNote = midiMsg.note # midi note
 			
-                        #Adjust audio to correct pitch
-			if (basePitch == -1 and curChannel != 9):
-				pitchCorrection = inNote - pitch
+                            #Adjust audio to correct pitch
+			    if (basePitch == -1 and curChannel != 9):
+			    	pitchCorrection = inNote - pitch
 				pitchCorrection = int(math.fmod(pitchCorrection, 12))
 				basePitch = inNote - pitchCorrection + 12
 		
-			#handle chords
-			chordSound = AudioSegment.silent(audioSize)
-			newSound = AudioSegment.silent(audioSize)
-                        for n in allNotes[midiMsg]:
+			    #handle chords
+			    chordSound = AudioSegment.silent(audioSize)
+			    newSound = AudioSegment.silent(audioSize)
+                            for n in allNotes[midiMsg]:
 				if (curChannel != 9):
 					pitchCorrection = n-basePitch
 					newSound = processNote(sound,pitchCorrection,audioSize,frame_rate)
@@ -164,8 +170,8 @@ for c in xrange(1,len(midiSong.tracks)):
 					else:
 						print 'Percussion Instrument ', n,' has no provided sound, will skip'
 		
-			chordSound = newSound.overlay(chordSound)
-			soundClip = soundClip + chordSound
+			        chordSound = newSound.overlay(chordSound)
+			    soundClip = soundClip + chordSound
 		
 		#overlay that sound clip with all others
 		#    segment that is overlayed is truncated, so pick longer one as base
