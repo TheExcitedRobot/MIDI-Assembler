@@ -34,6 +34,9 @@ https://wiki.python.org/moin/PythonInMusic
 5. Combine modified sounds, into MIDI pattern
 6. Export song
 
+## Results
+This program can successfully take multiple sound files and adjust their pitch and duration based on a MIDI file. The resulting song has similarties to the original sound and the original MIDI file. Testing has shown that the choice of sound files has the greatest effect on the output sound. Currently, the duration and pitch structure of the sounds should be taken into account when choosing sounds for different channels. Many tests were run to find the right sounds for the provided example output files. These sounds were chosen to fit certian channels. The same set of sounds with different channel assignments produced songs that were not as good as the provided examples. Unfortunately at this time, trial and error is required to find the correct sounds for each piece. When chosen correctly, the program will produce a unique song.
+
 ## Future Work
 This project could be continued and improved upon through better sound characterization and collection. Different MIDI files required many tests to find the right sounds. These sounds required pitches and durations that sound good with the duration and pitch changes applied throughout the song. Further work in analyzing the MIDI piece to suggest sounds or give feedback on the right sounds to provide could improve the final output of the songs. 
 
