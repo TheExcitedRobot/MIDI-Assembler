@@ -13,6 +13,7 @@ Converts MIDI instructions to music based on provided sound files
 
 ## Results
 This program can successfully take multiple sound files and adjust their pitch and duration based on a MIDI file. The resulting song has similarties to the original sound and the original MIDI file. Testing has shown that the choice of sound files has the greatest effect on the output sound. Currently, the duration and pitch structure of the sounds should be taken into account when choosing sounds for different channels. Many tests were run to find the right sounds for the provided example output files. These sounds were chosen to fit certian channels. The same set of sounds with different channel assignments produced songs that were not as good as the provided examples. Unfortunately at this time, trial and error is required to find the correct sounds for each piece. When chosen correctly, the program will produce a unique song.
+
 In the folder finalSongs are the songs we played Thursday during class. There are two versions of each track, one made using sounds from real instruments, and one made from the most musical sound effects we could find.
 
 ## Future Work
@@ -22,7 +23,9 @@ Additional work could also provide better insight into the use of multi pitch so
 
 ## Running the Code
 Run 
+
 python midiAssembler.py
+
 There are no command line arguments. At the moment it's set up to run the 'twelveBZ' MIDI file and turn that into 'outP' wav using the files in the channel folder as inputs.  Those sound effects are labelled channel0-16.wav
 
 ## Project Required Packages
